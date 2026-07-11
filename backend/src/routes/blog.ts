@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import { PrismaClient } from "../generated/prisma/client";
 import { sign, verify } from "hono/jwt";
+import { createBlogInput, updateBlogInput } from "@czar16/common";
 
 type Bindings = {
   DATABASE_URL: string;
@@ -41,6 +42,13 @@ blogRouter.post("/", async (c) => {
 
   try {
     const body = await c.req.json();
+    const { success } = createBlogInput.safeParse(body);
+    if (!success) {
+      c.status(411);
+      return c.json({
+        messgae: "Input not correct",
+      });
+    }
     const userId = c.get("userId");
 
     const blog = await prisma.post.create({
@@ -64,6 +72,13 @@ blogRouter.put("/", async (c) => {
 
   try {
     const body = await c.req.json();
+    const { success } = updateBlogInput.safeParse(body);
+    if (!success) {
+      c.status(411);
+      return c.json({
+        messgae: "Input not correct",
+      });
+    }
     const userId = c.get("userId");
 
     const existing = await prisma.post.findUnique({

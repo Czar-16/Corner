@@ -3,8 +3,7 @@ import { Hono } from "hono";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import { PrismaClient } from "../generated/prisma/client";
 import { sign, verify } from "hono/jwt";
-import { Bindings } from "hono/types";
-
+import { signinInput, signupInput } from "@czar16/common";
 export const userRouter = new Hono<{
   Bindings: {
     DATABASE_URL: string;
@@ -19,7 +18,14 @@ userRouter.post("/signup", async (c) => {
 
   try {
     const body = await c.req.json();
-    // TODO: add zod and hash password
+    const { success } = signupInput.safeParse(body);
+    if (!success) {
+      c.status(411);
+      return c.json({
+        message: "Inputs not correct",
+      });
+    }
+    // TODO: hash password
     const user = await prisma.user.create({
       data: {
         email: body.email,
@@ -41,7 +47,13 @@ userRouter.post("/signin", async (c) => {
 
   try {
     const body = await c.req.json();
-
+    const { success } = signinInput.safeParse(body);
+    if (!success) {
+      c.status(411);
+      return c.json({
+        message: "Inputs not correct",
+      });
+    }
     const user = await prisma.user.findUnique({
       where: { email: body.email },
     });
