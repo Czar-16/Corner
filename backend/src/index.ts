@@ -1,8 +1,6 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 
-import { withAccelerate } from "@prisma/extension-accelerate";
-import { PrismaClient } from "./generated/prisma/client";
-import { sign, verify } from "hono/jwt";
 import { userRouter } from "./routes/user";
 import { blogRouter } from "./routes/blog";
 
@@ -13,7 +11,16 @@ type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-app.route("api/v1/user", userRouter);
-app.route("api/v1/blog", blogRouter);
+app.use(
+  "*",
+  cors({
+    origin: "http://localhost:3000", // Change if your Next.js runs on another port
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization"],
+  }),
+);
+
+app.route("/api/v1/user", userRouter);
+app.route("/api/v1/blog", blogRouter);
 
 export default app;
